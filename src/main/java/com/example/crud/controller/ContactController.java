@@ -2,9 +2,12 @@ package com.example.crud.controller;
 
 import com.example.crud.model.Contact;
 import com.example.crud.repository.ContactRepository;
+import com.example.crud.service.ContactService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -12,36 +15,42 @@ import java.util.List;
 public class ContactController {
 
     @Autowired
-    private ContactRepository contactRepository;
+    private ContactService contactService;
 
     @GetMapping
-    public List<Contact> list(){
-        return contactRepository.findAll();
+    public ResponseEntity<List<Contact>> listContacts(){
+        var contacts = contactService.listContacts();
+        return ResponseEntity.ok(contacts);
+    }
+
+    @GetMapping("/{contactId}")
+    public ResponseEntity<Contact> getUserById(@PathVariable("contactId") String contactId){
+        var contact = contactService.getContactById(contactId);
+        if (contact.isPresent()) {
+            return ResponseEntity.ok(contact.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @PostMapping
-    public void saveContact(@RequestBody Contact contact){
-        contactRepository.save(contact);
+    public ResponseEntity<Contact> createContact (@RequestBody CreateContactDto createContactDto){
+        var contactId = contactService.createContact(createContactDto);
+        return ResponseEntity.created(URI.create("/contacts/" + contactId.toString())).build();
+    }
+
+    @PutMapping("/{contactId}")
+    public ResponseEntity<Void> updateContactById(@PathVariable("contactId") String contactId,
+                                                  @RequestBody CreateContactDto createContactDto){
+        contactService.updateContactById(contactId, createContactDto);
+        return ResponseEntity.noContent().build();
 
     }
 
-    @PutMapping
-    public void updateContact(@RequestBody Contact contact){
-        if(contact.getId() > 0){
-            contactRepository.save(contact);
-        } else {
-            throw new IllegalArgumentException("O contato não existe");
-        }
-
-    }
-
-    @DeleteMapping
-    public void deleteContact(@RequestBody Contact contact){
-        if(contact.getId() > 0){
-            contactRepository.deleteById(contact.getId());
-        } else {
-            throw new IllegalArgumentException("O contato não existe");
-        }
-
+    @DeleteMapping("/{contactId}")
+    public ResponseEntity<Void> deleteById(@PathVariable("contactId") String contactId) {
+        contactService.deleteById(contactId);
+        return ResponseEntity.noContent().build();
     }
 }

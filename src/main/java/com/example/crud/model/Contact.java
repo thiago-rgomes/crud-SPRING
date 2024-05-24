@@ -45,4 +45,14 @@ public class Contact {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    public Contact() {
+    }
+
+    public Contact(Long id, String nome, String telefone, String email) {
+        this.id = id;
+        this.nome = nome;
+        this.telefone = telefone;
+        this.email = email;
+    }
 }
